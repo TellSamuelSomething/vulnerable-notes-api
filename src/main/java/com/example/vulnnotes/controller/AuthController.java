@@ -1,11 +1,11 @@
 package com.example.vulnnotes.controller;
 
 import com.example.vulnnotes.security.JwtUtil;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,15 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
-/**
- * WARNING: INTENTIONALLY VULNERABLE. DO NOT DEPLOY.
- */
 @RestController
 @RequestMapping("/api")
 public class AuthController {
 
     private final JdbcTemplate jdbc;
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthController(JdbcTemplate jdbc, JwtUtil jwtUtil) {
         this.jdbc = jdbc;
@@ -36,14 +34,12 @@ public class AuthController {
         String username = body.getOrDefault("username", "");
         String password = body.getOrDefault("password", "");
 
-        // VULN (A03:2021 Injection - SQL injection): user input concatenated straight into SQL.
-        // password = ' OR '1'='1   or   username = admin'--   bypasses authentication.
-        // VULN (A02:2021 Cryptographic Failures): compares against a cleartext password column.
-        String sql = "SELECT id, username, role FROM users WHERE username = '" + username
-                + "' AND password = '" + password + "'";
+        // FIXED (A03:2021 Injection): parameterized query; input is bound as data, never parsed as SQL.
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT username, password, role FROM users WHERE username = ?", username);
 
-        List<Map<String, Object>> rows = jdbc.queryForList(sql);
-        if (rows.isEmpty()) {
+        // FIXED (A02:2021 Cryptographic Failures): compare against the stored BCrypt hash.
+        if (rows.isEmpty() || !passwordEncoder.matches(password, (String) rows.get(0).get("PASSWORD"))) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "invalid credentials"));
         }
 
@@ -55,20 +51,15 @@ public class AuthController {
                 "role", user.get("ROLE")));
     }
 
-    /** Returns the identity in the presented JWT; used to demonstrate forged tokens being accepted. */
+    /** Returns the identity in the presented JWT; forged or expired tokens are rejected. */
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(@RequestHeader(value = "Authorization", required = false) String auth) {
-        if (auth == null || !auth.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "missing bearer token"));
-        }
-        try {
-            Claims claims = jwtUtil.parse(auth.substring(7));
-            return ResponseEntity.ok(Map.of(
-                    "username", claims.getSubject(),
-                    "role", String.valueOf(claims.get("role")),
-                    "expires", String.valueOf(claims.getExpiration())));
-        } catch (JwtException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "invalid token"));
-        }
+        return jwtUtil.fromAuthorizationHeader(auth)
+                .<ResponseEntity<Map<String, Object>>>map(claims -> ResponseEntity.ok(Map.of(
+                        "username", claims.getSubject(),
+                        "role", String.valueOf(claims.get("role")),
+                        "expires", String.valueOf(claims.getExpiration()))))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "missing, invalid or expired token")));
     }
 }

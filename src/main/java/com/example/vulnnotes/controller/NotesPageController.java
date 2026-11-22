@@ -8,9 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-/**
- * WARNING: INTENTIONALLY VULNERABLE. DO NOT DEPLOY.
- */
 @Controller
 public class NotesPageController {
 
@@ -29,8 +26,8 @@ public class NotesPageController {
         return "notes";
     }
 
-    // VULN (A03:2021 Injection - Stored XSS): title/content stored without validation or sanitising,
-    // later rendered unescaped with th:utext in notes.html.
+    // FIXED (A03:2021 Injection - XSS): input is stored as-is, but notes.html now escapes it on output
+    // (th:text) and the CSP header blocks inline scripts. Escaping on output is the reliable layer.
     @PostMapping("/notes")
     public String add(@RequestParam String title,
                       @RequestParam String content,

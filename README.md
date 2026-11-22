@@ -1,6 +1,17 @@
 # vulnerable-notes-api
 
-> ## ⚠️ WARNING: INTENTIONALLY VULNERABLE APPLICATION ⚠️
+> ## ✅ You are on the `secure` branch
+> This branch fixes all five flaws from `main`. Each fix is marked in the source with a `// FIXED` comment.
+> Every exploit below should now **fail**. Compare the two branches with `git diff main secure`.
+> The rest of this README describes the vulnerable `main` branch.
+>
+> Running this branch needs a signing secret of at least 32 characters:
+> ```bash
+> JWT_SECRET="any-long-random-string-of-32+-chars" mvn spring-boot:run
+> ```
+> On PowerShell: `$env:JWT_SECRET="..."; mvn spring-boot:run`
+
+> ## ⚠️ WARNING: INTENTIONALLY VULNERABLE APPLICATION (`main` branch) ⚠️
 > This is a **deliberately insecure** security-training project, in the spirit of
 > [OWASP WebGoat](https://owasp.org/www-project-webgoat/) and [DVWA](https://github.com/digininja/DVWA).
 > **Do NOT deploy it** to any server, cloud, or network you don't fully control.
@@ -109,9 +120,9 @@ curl -s -X POST http://localhost:8080/api/login -H 'Content-Type: application/js
 
 You can also run `SELECT * FROM users;` in the H2 console.
 
-## Roadmap: `secure` branch
+## Fixes on the `secure` branch
 
-A future `secure` branch will fix every issue, so you can diff the two branches side by side:
+The `secure` branch fixes every issue, so you can diff the two branches side by side:
 
 | # | Fix |
 |---|-----|

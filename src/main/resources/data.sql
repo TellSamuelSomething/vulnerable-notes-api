@@ -1,8 +1,9 @@
--- WARNING: INTENTIONALLY VULNERABLE SECURITY-TRAINING PROJECT. DO NOT DEPLOY.
--- VULN (A02:2021 Cryptographic Failures): cleartext passwords
-INSERT INTO users (id, username, password, role) VALUES (1, 'alice', 'alicepass',   'USER');
-INSERT INTO users (id, username, password, role) VALUES (2, 'bob',   'bobpass',     'USER');
-INSERT INTO users (id, username, password, role) VALUES (3, 'admin', 'sup3rs3cr3t', 'ADMIN');
+-- `secure` branch: fixed version of the training app.
+-- FIXED (A02:2021 Cryptographic Failures): passwords stored as BCrypt hashes, never in cleartext.
+-- (Seed logins are unchanged: alice/alicepass, bob/bobpass, admin/sup3rs3cr3t.)
+INSERT INTO users (id, username, password, role) VALUES (1, 'alice', '$2a$10$ed.6LzgOToFjAMpyMOUZUux9WZxWMqU/oqH8CI83309vVGQE1QcYC', 'USER');
+INSERT INTO users (id, username, password, role) VALUES (2, 'bob',   '$2a$10$GVz0U6J0zU3zQpUApcD.dO2JT04LlMV4Vx0kCKY8yfy8RV321M6I2', 'USER');
+INSERT INTO users (id, username, password, role) VALUES (3, 'admin', '$2a$10$2VjLbyNUVW70OYWNSb9dHOFXv0IiLskqVY1VnvuouGz.PzcXFUHD2', 'ADMIN');
 
 INSERT INTO notes (id, owner_id, title, content) VALUES (1, 1, 'Alice private diary', 'Do not tell bob about the surprise party.');
 INSERT INTO notes (id, owner_id, title, content) VALUES (2, 1, 'Alice bank PIN',      'My PIN is 4821.');

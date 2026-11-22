@@ -1,28 +1,23 @@
 <!DOCTYPE html>
-<!-- WARNING: INTENTIONALLY VULNERABLE SECURITY-TRAINING PROJECT. DO NOT DEPLOY. -->
+<!-- `secure` branch: fixed version of the training app. -->
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Vulnerable Notes</title>
-    <style>
-        body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; }
-        .warn { background: #b00020; color: #fff; padding: .75rem 1rem; border-radius: 4px; }
-        .note { border: 1px solid #ccc; border-radius: 4px; padding: .5rem 1rem; margin: .5rem 0; }
-        .meta { color: #666; font-size: .8rem; }
-        input, textarea { width: 100%; box-sizing: border-box; margin-bottom: .5rem; }
-    </style>
+    <title>Notes (secure branch)</title>
+    <!-- Styles live in a separate file so the CSP can forbid all inline code. -->
+    <link rel="stylesheet" href="/notes.css">
 </head>
 <body>
 <div class="warn">
-    <strong>Intentionally vulnerable training app.</strong> Do not deploy. Do not enter real data.
+    <strong>Security-training project (fixed <code>secure</code> branch).</strong> Do not enter real data.
 </div>
 
 <h1>Notes</h1>
 
 <div class="note" th:each="note : ${notes}">
-    <!-- VULN (A03:2021 Injection - Stored XSS): th:utext renders user-controlled HTML/JS unescaped -->
-    <h3 th:utext="${note.title}">title</h3>
-    <div th:utext="${note.content}">content</div>
+    <!-- FIXED (A03:2021 Injection - XSS): th:text HTML-escapes the value, so markup is shown as text -->
+    <h3 th:text="${note.title}">title</h3>
+    <div th:text="${note.content}">content</div>
     <div class="meta">id <span th:text="${note.id}"></span>, owner <span th:text="${note.ownerId}"></span></div>
 </div>
 

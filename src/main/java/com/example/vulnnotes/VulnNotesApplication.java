@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * WARNING: INTENTIONALLY VULNERABLE SECURITY-TRAINING PROJECT. DO NOT DEPLOY.
- * Every "// VULN" comment marks a deliberate flaw for learning purposes.
+ * `secure` branch of a security-training project: the fixed version.
+ * Every "// FIXED" comment marks where a deliberate flaw from `main` was repaired.
  */
 @SpringBootApplication
 public class VulnNotesApplication {
