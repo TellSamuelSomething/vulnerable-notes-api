@@ -10,6 +10,9 @@
 > JWT_SECRET="any-long-random-string-of-32+-chars" mvn spring-boot:run
 > ```
 > On PowerShell: `$env:JWT_SECRET="..."; mvn spring-boot:run`
+>
+> Also different on this branch: <http://localhost:8080/notes> requires logging in and shows only your
+> own notes (with CSRF protection on its forms), and the H2 console is switched off.
 
 > ## ⚠️ WARNING: INTENTIONALLY VULNERABLE APPLICATION (`main` branch) ⚠️
 > This is a **deliberately insecure** security-training project, in the spirit of

@@ -12,20 +12,26 @@
     <strong>Security-training project (fixed <code>secure</code> branch).</strong> Do not enter real data.
 </div>
 
-<h1>Notes</h1>
+<form method="post" action="/logout" class="logout">
+    Logged in as <strong th:text="${user.username}">user</strong>
+    <input type="hidden" name="_csrf" th:value="${csrf}">
+    <button type="submit">Log out</button>
+</form>
+
+<h1>My notes</h1>
 
 <div class="note" th:each="note : ${notes}">
     <!-- FIXED (A03:2021 Injection - XSS): th:text HTML-escapes the value, so markup is shown as text -->
     <h3 th:text="${note.title}">title</h3>
     <div th:text="${note.content}">content</div>
-    <div class="meta">id <span th:text="${note.id}"></span>, owner <span th:text="${note.ownerId}"></span></div>
+    <div class="meta">id <span th:text="${note.id}"></span></div>
 </div>
 
 <h2>Add note</h2>
 <form method="post" action="/notes">
     <input name="title" placeholder="Title" required>
     <textarea name="content" rows="4" placeholder="Content" required></textarea>
-    <input type="hidden" name="ownerId" value="1">
+    <input type="hidden" name="_csrf" th:value="${csrf}">
     <button type="submit">Save</button>
 </form>
 </body>

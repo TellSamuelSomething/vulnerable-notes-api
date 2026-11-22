@@ -26,10 +26,4 @@ public class ContentSecurityPolicyFilter extends OncePerRequestFilter {
         response.setHeader("X-Content-Type-Options", "nosniff");
         chain.doFilter(request, response);
     }
-
-    /** The H2 console relies on inline scripts and frames, so the policy would break it. */
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().startsWith("/h2-console");
-    }
 }

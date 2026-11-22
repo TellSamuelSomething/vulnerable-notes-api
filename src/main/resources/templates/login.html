@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- `secure` branch: fixed version of the training app. -->
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log in (secure branch)</title>
+    <link rel="stylesheet" href="/notes.css">
+</head>
+<body>
+<div class="warn">
+    <strong>Security-training project (fixed <code>secure</code> branch).</strong> Do not enter real data.
+</div>
+
+<h1>Log in</h1>
+<p class="error" th:if="${error}">Invalid username or password.</p>
+<form method="post" action="/login">
+    <input name="username" placeholder="Username" autocomplete="username" required>
+    <input name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button type="submit">Log in</button>
+</form>
+</body>
+</html>
