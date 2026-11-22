@@ -1,5 +1,9 @@
 # vulnerable-notes-api
 
+[![build](https://github.com/TellSamuelSomething/vulnerable-notes-api/actions/workflows/build.yml/badge.svg?branch=secure)](https://github.com/TellSamuelSomething/vulnerable-notes-api/actions/workflows/build.yml)
+[![codeql](https://github.com/TellSamuelSomething/vulnerable-notes-api/actions/workflows/codeql.yml/badge.svg?branch=secure)](https://github.com/TellSamuelSomething/vulnerable-notes-api/actions/workflows/codeql.yml)
+[![dependency-check](https://github.com/TellSamuelSomething/vulnerable-notes-api/actions/workflows/dependency-check.yml/badge.svg?branch=secure)](https://github.com/TellSamuelSomething/vulnerable-notes-api/actions/workflows/dependency-check.yml)
+
 > ## ✅ You are on the `secure` branch
 > This branch fixes all five flaws from `main`. Each fix is marked in the source with a `// FIXED` comment.
 > Every exploit below should now **fail**. Compare the two branches with `git diff main secure`.
@@ -123,9 +127,9 @@ curl -s -X POST http://localhost:8080/api/login -H 'Content-Type: application/js
 
 You can also run `SELECT * FROM users;` in the H2 console.
 
-## Fixes on the `secure` branch
+## Fixes: `secure` branch
 
-The `secure` branch fixes every issue, so you can diff the two branches side by side:
+The [`secure`](../../tree/secure) branch fixes every issue, so you can diff the two branches side by side (`git diff main secure`):
 
 | # | Fix |
 |---|-----|
@@ -135,15 +139,26 @@ The `secure` branch fixes every issue, so you can diff the two branches side by 
 | 4 | Signing secret moved out of the code (environment variable or secret manager) and tokens given an expiry |
 | 5 | BCrypt password hashing |
 
-## CI: security scanning
+## Security pipeline (DevSecOps)
 
-[`.github/workflows/security.yml`](.github/workflows/security.yml) runs on every push and pull request, and weekly:
+Three GitHub Actions workflows run on every push and pull request to `main` and `secure`:
 
-- **CodeQL** (SAST): scans the code for flaws such as the SQL injection.
-- **OWASP Dependency-Check** (SCA): looks for known CVEs in the dependencies.
+| Workflow | Type | What it does |
+|----------|------|--------------|
+| [`build.yml`](.github/workflows/build.yml) | Build gate | JDK 21, `mvn -B clean verify`: the project must compile and its tests must pass. |
+| [`codeql.yml`](.github/workflows/codeql.yml) | SAST | GitHub CodeQL analyses the Java code (also weekly). Results go to **Security → Code scanning**. |
+| [`dependency-check.yml`](.github/workflows/dependency-check.yml) | SCA | OWASP Dependency-Check looks up every Maven dependency in the CVE database (also weekly). The HTML and SARIF reports are saved as a build artifact, and the SARIF goes to the Security tab. The job fails on any CVSS 7.0+ finding, but only after the report is published. |
 
-Both send their findings to the repository's **Security → Code scanning** tab. The pipeline does not
-fail on findings: they are expected on this branch and should disappear on `secure`.
+**Findings are expected.** This project is intentionally vulnerable, so red scanners on `main` are
+the point: they prove the pipeline catches real problems. Compare with the `secure` branch.
+
+The two scanners cover the two halves of AppSec:
+
+- **CodeQL** finds bugs in *our own code*, such as the SQL injection and XSS.
+- **Dependency-Check** finds known vulnerabilities in *other people's code*: the libraries we depend on.
+
+All actions are pinned to full commit SHAs, so a hijacked or re-tagged action version can't change what runs.
+
 Dependency-Check needs a free [NVD API key](https://nvd.nist.gov/developers/request-an-api-key) stored as the repository secret `NVD_API_KEY`.
 
 ## Disclaimer

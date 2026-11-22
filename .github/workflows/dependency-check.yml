@@ -1,0 +1,75 @@
+# SCA: OWASP Dependency-Check looks for known CVEs in the project's Maven dependencies.
+# The report is always produced and uploaded; the job is marked failed afterwards if any
+# dependency has a CVSS score of 7.0 or higher.
+name: dependency-check
+
+on:
+  push:
+    branches: [main, secure]
+  pull_request:
+    branches: [main, secure]
+  schedule:
+    - cron: "0 6 * * 1" # weekly, so newly published CVEs show up without a code change
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write # needed to upload SARIF to the Security tab
+
+jobs:
+  scan:
+    name: OWASP Dependency-Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Reuse the downloaded NVD database between runs; the first run is slow.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: dependency-check-data-${{ github.run_id }}
+          restore-keys: dependency-check-data-
+
+      # Needs repository secret NVD_API_KEY (free: https://nvd.nist.gov/developers/request-an-api-key).
+      # continue-on-error lets the report steps below run even when the CVSS threshold is exceeded.
+      - name: Run Dependency-Check
+        id: scan
+        continue-on-error: true
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: >
+          mvn -B org.owasp:dependency-check-maven:13.0.0:check
+          -DnvdApiKey="$NVD_API_KEY"
+          -Dformats=HTML,SARIF
+          -DfailBuildOnCVSS=7
+          -DossindexAnalyzerEnabled=false
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-check-report
+          path: |
+            target/dependency-check-report.html
+            target/dependency-check-report.sarif
+          if-no-files-found: warn
+
+      - name: Upload SARIF to Security tab
+        if: always() && hashFiles('target/dependency-check-report.sarif') != ''
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
+        with:
+          sarif_file: target/dependency-check-report.sarif
+          category: dependency-check
+
+      # Now that the report is published, surface the threshold breach as a failed job.
+      - name: Fail on CVSS >= 7
+        if: steps.scan.outcome == 'failure'
+        run: |
+          echo "::error::Dependency-Check found dependencies with CVSS >= 7 (or the scan itself failed). See the report artifact."
+          exit 1
