@@ -34,7 +34,7 @@ OWASP Top 10 (2021) category.
 
 ## Stack
 
-Java 21 · Spring Boot 3.3.5 (Web, Thymeleaf, JDBC) · H2 in-memory DB (`schema.sql` + `data.sql`) · jjwt 0.12.6
+Java 21 · Spring Boot 3.5.16 (Web, Thymeleaf, JDBC) · H2 in-memory DB (`schema.sql` + `data.sql`) · jjwt 0.12.6
 
 ## Run it
 
@@ -145,21 +145,25 @@ The [`secure`](../../tree/secure) branch fixes every issue, so you can diff the 
 
 ## Security pipeline (DevSecOps)
 
-Three GitHub Actions workflows run on every push and pull request to `main` and `secure`:
+Five GitHub Actions workflows run on every push and pull request to `main` and `secure`:
 
 | Workflow | Type | What it does |
 |----------|------|--------------|
 | [`build.yml`](.github/workflows/build.yml) | Build gate | JDK 21, `mvn -B clean verify`: the project must compile and its tests must pass. |
 | [`codeql.yml`](.github/workflows/codeql.yml) | SAST | GitHub CodeQL analyses the Java code (also weekly). Results go to **Security → Code scanning**. |
 | [`dependency-check.yml`](.github/workflows/dependency-check.yml) | SCA | OWASP Dependency-Check looks up every Maven dependency in the CVE database (also weekly). The HTML and SARIF reports are saved as a build artifact, and the SARIF goes to the Security tab. The job fails on any CVSS 7.0+ finding, but only after the report is published. |
+| [`gitleaks.yml`](.github/workflows/gitleaks.yml) | Secret scanning | Gitleaks searches the whole Git history for committed secrets. It fails on `main`, where the JWT secret is hard-coded. |
+| [`zap.yml`](.github/workflows/zap.yml) | DAST | Starts the app inside the job and attacks it with OWASP ZAP (spider + active scan for SQL injection, XSS and more). The HTML report is saved as a build artifact. |
 
 **Findings are expected.** This project is intentionally vulnerable, so red scanners on `main` are
 the point: they prove the pipeline catches real problems. Compare with the `secure` branch.
 
-The two scanners cover the two halves of AppSec:
+The scanners look at the app from different angles:
 
 - **CodeQL** finds bugs in *our own code*, such as the SQL injection and XSS.
 - **Dependency-Check** finds known vulnerabilities in *other people's code*: the libraries we depend on.
+- **Gitleaks** finds *secrets* that should never have been committed.
+- **ZAP** attacks the *running app* from the outside, like a real attacker, without reading any code.
 
 All actions are pinned to full commit SHAs, so a hijacked or re-tagged action version can't change what runs.
 

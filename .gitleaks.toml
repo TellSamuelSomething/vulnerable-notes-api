@@ -1,0 +1,16 @@
+# Gitleaks config for the `secure` branch.
+[extend]
+useDefault = true # all of Gitleaks' built-in rules
+
+[[allowlists]]
+description = "Known, non-secret test values and the leaked `main` JWT secret, which is public and not used on this branch"
+regexTarget = "line"
+regexes = [
+  # The secret hard-coded on `main` (vulnerability #4). It is public in Git history and must never be reused;
+  # it appears here only in the README exploit and in a test that proves forged tokens are rejected.
+  '''vuln-notes-hardcoded-secret-key!''',
+  # Dummy value used only by SecurityRegressionTest.
+  '''test-only-secret-that-is-at-least-32-bytes-long''',
+  # Placeholder in the README run instructions.
+  '''any-long-random-string-of-32\+-chars''',
+]
