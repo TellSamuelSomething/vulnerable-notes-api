@@ -17,6 +17,10 @@
 >
 > Also different on this branch: <http://localhost:8080/notes> requires logging in and shows only your
 > own notes (with CSRF protection on its forms), and the H2 console is switched off.
+>
+> **Writeups:** [docs/writeups](docs/writeups/README.md) explain each flaw and why its fix works.
+>
+> **Tests:** [`SecurityRegressionTest`](src/test/java/com/example/vulnnotes/SecurityRegressionTest.java) replays every exploit below and expects it to fail, so `mvn verify` (and the `build` workflow) breaks if a flaw comes back.
 
 > ## ⚠️ WARNING: INTENTIONALLY VULNERABLE APPLICATION (`main` branch) ⚠️
 > This is a **deliberately insecure** security-training project, in the spirit of
